@@ -1,0 +1,30 @@
+class block{        
+    private：
+    int x；//横坐标
+    int y；//纵坐标
+    int name；//方块名称
+    int state；//方块目前的状态
+    int director；//方块的旋转方向
+    public：
+    void move()；//控制旋转
+    void fastdown()；//加速下降
+    void down（）；//下降
+}；
+class map{
+   private:
+   int map[300][300];
+   public:
+   void initmap();//初始化地图
+   void draw map（）；//绘制地图
+};
+class player{
+    private：
+    char name[100];
+    char name2[100];
+    public:
+    void cleanblock();//清除方块
+    bool judge();//判断是否需要清除
+    void addblock（）；//增加方块
+    void check（）；//检查方块移动是否正常
+    int num（）；//计算得到的分数
+}；
