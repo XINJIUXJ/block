@@ -1,22 +1,70 @@
-class block{        
+class Block{        
     private：
     int x；//横坐标
     int y；//纵坐标
-    int name；//方块名称
-    int state；//方块目前的状态
-    int director；//方块的旋转方向
-    public：
-    void move()；//控制旋转
-    void fastdown()；//加速下降
-    void down（）；//下降
+    int type；//方块名称
+    int director；//方块的旋转方向 
+	public:/* 设置方块 */ 
+		void set(int _x, int _y, int _shape){
+			x = _x;
+			y = _y;
+			if(_shape != -1){
+				for(int i = 0; i < 4; i++)
+					for(int j = 0; j < 4; j++)
+						shape[i][j] = shapes[_shape][i][j];	
+				type = _shape;
+				director = 0;
+			}
+		}
+		void generate(){
+			for(int i = 0; i < 8; i++)
+				for(int j = 0; j < 4; j++)
+					for(int k = 0; k < 4; k++)
+						shapes[i][j][k] = 0;
+			shapes[0][1][1] = 1;	/* 石头 */
+			shapes[1][1][0] = shapes[1][1][1] = shapes[1][1][2] = shapes[1][1][3] = 1;/* 棍子 */
+			shapes[2][0][0] = shapes[2][0][1] = shapes[2][1][1] = shapes[2][2][1] = 1;/* 七 (左）*/
+			shapes[3][0][1] = shapes[3][0][2] = shapes[3][1][1] = shapes[3][2][1] = 1;/* 七 (右) */
+			shapes[4][0][1] = shapes[4][1][0] = shapes[4][1][1] = shapes[4][2][1] = 1;/* 凸 */
+			shapes[5][1][1] = shapes[5][1][2] = shapes[5][2][1] = shapes[5][2][2] = 1;/* 田*/
+			shapes[6][0][0] = shapes[6][0][1] = shapes[6][1][1] = shapes[6][1][2] = 1;/* Z(左)*/
+			shapes[7][0][2] = shapes[7][0][1] = shapes[7][1][1] = shapes[7][1][0] = 1;/* Z(右)*/
+		}
+ }; 
 }；
+void drawBlock(Block block){
+	int x = block.x; // 获取方块左上角的坐标
+	int y = block.y;
+	for(int i = 0; i < 4; i++){
+		for(int j = 0; j < 4; j++){
+			post(y + j, x + i); // 这里的x和y的位置倒置，上面讲pos这个函数时有讲述原因。
+			if(block.shape[i][j] == 1 && x + i >= 0 && x + i < height - 1 && y + j < width - 1 && y + j > 0){
+				std::cout << "■";
+			}
+		}
+	}
+	post(0,height); // 绘制完成后，需要将位置定位到最低行.
+}
 class map{
    private:
    int map[300][300];
    public:
    void initmap();//初始化地图
-   void draw map（）；//绘制地图
 };
+void drawMap(int **map){;
+	pos(0, 0);
+	for(int i = 0; i < height; i++){
+		for(int j = 0; j < width; j++){
+			if(map[i][j] == 1){
+				cout << "■";	// 背景
+			}else{
+				cout << "□"; 	// 可移动区域 
+			}
+		}
+		cout << endl;
+	} 
+	return;
+}
 class player{
     private：
     char name[100];
