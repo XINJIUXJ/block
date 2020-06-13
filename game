@@ -1,78 +1,580 @@
-class Block{        
-    private：
-    int x；//横坐标
-    int y；//纵坐标
-    int type；//方块名称
-    int director；//方块的旋转方向 
-	public:/* 设置方块 */ 
-		void set(int _x, int _y, int _shape){
-			x = _x;
-			y = _y;
-			if(_shape != -1){
-				for(int i = 0; i < 4; i++)
-					for(int j = 0; j < 4; j++)
-						shape[i][j] = shapes[_shape][i][j];	
-				type = _shape;
-				director = 0;
+#include <graphics.h>
+#include <conio.h>
+#include <cmath>
+#include <ctime>
+#include <windows.h>
+
+//方块：
+struct Square
+{
+	int dir[4][4][2];  //方块结构体
+};
+enum Cmd
+{
+	Cmd_rotate,  // 方块旋转
+	Cmd_left,    // 方块左移
+	Cmd_right,   // 方块右移
+	Cmd_down     // 方块下移
+};
+//7种方块
+Square squares[7] = {
+	{ 0, -2, 0, -1, 0, 0, 1, 0, 0, -1, 1, -1, 2, -1, 0, 0, 0, -2, 1, -2, 1, -1, 1, 0, 0, 0, 1, 0, 2, 0, 2, -1 },       //  L 型
+	{ 0, 0, 1, 0, 1, -1, 1, -2, 0, -1, 0, 0, 1, 0, 2, 0, 0, -2, 0, -1, 0, 0, 1, -2, 0, -1, 1, -1, 2, -1, 2, 0 },       //  L 型（反）
+	{ 0, -1, 0, 0, 1, -1, 1, 0, 0, -1, 0, 0, 1, -1, 1, 0, 0, -1, 0, 0, 1, -1, 1, 0, 0, -1, 0, 0, 1, -1, 1, 0 },        // 田 型
+	{ 0, 0, 1, -1, 1, 0, 2, 0, 1, -2, 1, -1, 1, 0, 2, -1, 0, -1, 1, -1, 1, 0, 2, -1, 0, -1, 1, -2, 1, -1, 1, 0 },      // 山 型
+	{ 0, -3, 0, -2, 0, -1, 0, 0, 0, -3, 1, -3, 2, -3, 3, -3, 0, -3, 0, -2, 0, -1, 0, 0, 0, -3, 1, -3, 2, -3, 3, -3 },  //  | 型
+	{ 0, -1, 1, -1, 1, 0, 2, 0, 0, -1, 0, 0, 1, -2, 1, -1, 0, -1, 1, -1, 1, 0, 2, 0, 0, -1, 0, 0, 1, -2, 1, -1 },      //  Z 型
+	{ 0, 0, 1, -1, 1, 0, 2, -1, 1, -2, 1, -1, 2, -1, 2, 0, 0, 0, 1, -1, 1, 0, 2, -1, 1, -2, 1, -1, 2, -1, 2, 0 }       //  Z 型（反）
+};
+
+Square squares1[7] = {
+	{ 0, -2, 0, -1, 0, 0, 1, 0, 0, -1, 1, -1, 2, -1, 0, 0, 0, -2, 1, -2, 1, -1, 1, 0, 0, 0, 1, 0, 2, 0, 2, -1 },       //  L 型
+	{ 0, 0, 1, 0, 1, -1, 1, -2, 0, -1, 0, 0, 1, 0, 2, 0, 0, -2, 0, -1, 0, 0, 1, -2, 0, -1, 1, -1, 2, -1, 2, 0 },       //  L 型（反）
+	{ 0, -1, 0, 0, 1, -1, 1, 0, 0, -1, 0, 0, 1, -1, 1, 0, 0, -1, 0, 0, 1, -1, 1, 0, 0, -1, 0, 0, 1, -1, 1, 0 },        // 田 型
+	{ 0, 0, 1, -1, 1, 0, 2, 0, 1, -2, 1, -1, 1, 0, 2, -1, 0, -1, 1, -1, 1, 0, 2, -1, 0, -1, 1, -2, 1, -1, 1, 0 },      // 山 型
+	{ 0, -3, 0, -2, 0, -1, 0, 0, 0, -3, 1, -3, 2, -3, 3, -3, 0, -3, 0, -2, 0, -1, 0, 0, 0, -3, 1, -3, 2, -3, 3, -3 },  //  | 型
+	{ 0, -1, 1, -1, 1, 0, 2, 0, 0, -1, 0, 0, 1, -2, 1, -1, 0, -1, 1, -1, 1, 0, 2, 0, 0, -1, 0, 0, 1, -2, 1, -1 },      //  Z 型
+	{ 0, 0, 1, -1, 1, 0, 2, -1, 1, -2, 1, -1, 2, -1, 2, 0, 0, 0, 1, -1, 1, 0, 2, -1, 1, -2, 1, -1, 2, -1, 2, 0 }       //  Z 型（反）
+};
+
+//颜色
+const double pi = acos(-1);
+COLORREF tmp_line_color;
+LINESTYLE tmp_line_style;
+COLORREF tmp_text_color;
+LOGFONT tmp_text_style;
+COLORREF tmp_fill_color;
+COLORREF colors[7] = { RGB(215,236,241), RGB(215,236,241), RGB(215,236,241), RGB(215,236,241), RGB(215,236,241), RGB(215,236,241), RGB(215,236,241) };
+
+
+//其他变量
+int mp[10][15],mp1[10][15];      //尘埃落定的方块
+int mp_tmp[10][15],mp_tmp1[10][15];    //
+COLORREF mp_c[10][15],mp_c1[10][15];
+COLORREF mp_c_tmp[10][15], mp_c_tmp1[10][15];
+wchar_t score_tips[30], score_tips1[30];
+wchar_t over_tips[50], over_tips1[50];
+
+DWORD time_now, time_now1;
+int flag_next, flag_next1;
+int flag_over, flag_over1;     //判断游戏结束
+int now_c_idx, now_c_idx1;    //颜色索引
+int now_s_idx, now_s_idx1;    //类型索引
+int now_d_idx, now_d_idx1;    //形状索引
+int next_c_idx, next_c_idx1;
+int next_s_idx, next_s_idx1;
+int next_d_idx, next_d_idx1;
+int now_mp_x, now_mp_x1;          //当前的地图位置
+int now_mp_y, now_mp_y1;         //当前的地图位置
+int score, score1;            //分数
+
+void initEnvironment();
+void initDatasPerRound();
+void initDatasPerSquare();
+void drawGameBG();
+void drawSide();
+void drawItem(int x, int y, COLORREF c);
+void drawSquareNow();
+void drawSquareNext();
+void drawMap();
+Cmd getCmdL();
+Cmd getCmdR();
+void execCmd(Cmd cmd, int mp[10][15], int now_mp_x, int now_mp_y, int now_d_idx, Square squares[]);
+bool checkPut(int mp_x, int mp_y, int dir_idx, Square squares[7]);
+void execClear(int mp_tmp[][15], COLORREF mp_c_tmp[][15], int score);
+bool checkOver(int mp[10][15]);
+void moveRotate(int mp[10][15], int now_mp_x, int now_mp_y, int now_d_idx, Square squares[]);
+void moveLeft(int mp[10][15], int now_mp_x, int now_mp_y, int now_d_idx, Square squares[]);
+void moveRight(int mp[10][15], int now_mp_x, int now_mp_y, int now_d_idx, Square squares[]);
+void moveDown(int mp[10][15], int now_mp_x, int now_mp_y, int now_d_idx, Square squares[7]);
+void recordSquareNow(int now_mp_x, int now_s_idx, int now_d_idx, Square square[7], int mp[10][15]);
+
+int main()
+{
+	initEnvironment();
+	// 开始游戏
+	while (1) {
+		initDatasPerRound();
+		while (!flag_over && !flag_over1) {
+			initDatasPerSquare();
+			while (!flag_next && !flag_next1) {
+				BeginBatchDraw();
+				drawGameBG();
+				drawSide();
+				drawMap();
+				drawSquareNow();
+				EndBatchDraw();
+				Cmd cmd = getCmdL(); Cmd cmd1 = getCmdR();
+				execCmd(cmd, mp, now_mp_x, now_mp_y, now_d_idx,squares);    execCmd(cmd1, mp1,now_mp_x1, now_mp_y1,  now_d_idx1, squares1);
 			}
 		}
-		void generate(){
-			for(int i = 0; i < 8; i++)
-				for(int j = 0; j < 4; j++)
-					for(int k = 0; k < 4; k++)
-						shapes[i][j][k] = 0;
-			shapes[0][1][1] = 1;	/* 石头 */
-			shapes[1][1][0] = shapes[1][1][1] = shapes[1][1][2] = shapes[1][1][3] = 1;/* 棍子 */
-			shapes[2][0][0] = shapes[2][0][1] = shapes[2][1][1] = shapes[2][2][1] = 1;/* 七 (左）*/
-			shapes[3][0][1] = shapes[3][0][2] = shapes[3][1][1] = shapes[3][2][1] = 1;/* 七 (右) */
-			shapes[4][0][1] = shapes[4][1][0] = shapes[4][1][1] = shapes[4][2][1] = 1;/* 凸 */
-			shapes[5][1][1] = shapes[5][1][2] = shapes[5][2][1] = shapes[5][2][2] = 1;/* 田*/
-			shapes[6][0][0] = shapes[6][0][1] = shapes[6][1][1] = shapes[6][1][2] = 1;/* Z(左)*/
-			shapes[7][0][2] = shapes[7][0][1] = shapes[7][1][1] = shapes[7][1][0] = 1;/* Z(右)*/
-		}
- }; 
-}；
-void drawBlock(Block block){
-	int x = block.x; // 获取方块左上角的坐标
-	int y = block.y;
-	for(int i = 0; i < 4; i++){
-		for(int j = 0; j < 4; j++){
-			post(y + j, x + i); // 这里的x和y的位置倒置，上面讲pos这个函数时有讲述原因。
-			if(block.shape[i][j] == 1 && x + i >= 0 && x + i < height - 1 && y + j < width - 1 && y + j > 0){
-				std::cout << "■";
+		swprintf(over_tips, 39, L"游戏结束\n你的最终得分：%d\n是否再来亿局？", score * 100);
+		swprintf(over_tips1, 39, L"游戏结束\n你的最终得分：%d\n是否再来亿局？", score1 * 100);
+		if (MessageBox(GetHWnd(), over_tips, L"再来亿局？", MB_ICONQUESTION | MB_YESNO) == IDNO)
+			break;
+	}
+/*	while (true)
+	{
+		initDatasPerRound();
+		while (!flag_over)
+		{
+			initDatasPerSquare();
+			while (!flag_next)
+			{
+				BeginBatchDraw();
+				drawGameBG();
+				drawSide();
+				//drawLines();
+				drawMap();
+				drawSquareNow();
+				EndBatchDraw();
+				Cmd cmd = getCmd();
+				execCmd(cmd);
 			}
+		}
+		// 一局结束后的统计
+		swprintf(over_tips, 39, L"游戏结束\n你的最终得分：%d\n是否再来亿局？", score * 100);
+		if (MessageBox(GetHWnd(), over_tips, L"再来亿局？", MB_ICONQUESTION | MB_YESNO) == IDNO)
+			break;
+	}
+	*/
+
+	return 0;
+}
+
+void initEnvironment()
+{
+	// 窗口设置
+	initgraph(1200, 540);
+	HWND hwnd = GetHWnd();
+	SetWindowText(hwnd, L"我罗斯方块");
+	SetWindowPos(hwnd, HWND_TOP, 700, 20, 0, 0, SWP_NOSIZE | SWP_SHOWWINDOW);
+
+	// 绘图模式设置
+	setbkmode(TRANSPARENT);
+
+	// 随机数种子
+	srand(time(NULL));
+}
+
+void initDatasPerRound()
+{
+	memset(mp, 0, sizeof(mp));
+	memset(mp, 0, sizeof(mp_c));
+	time_now = GetTickCount();
+	next_c_idx = rand() % 7;
+	next_s_idx = rand() % 7;
+	next_d_idx = rand() % 4;
+	flag_over = 0;
+	score = 0;
+	memset(mp1, 0, sizeof(mp1));
+	memset(mp1, 0, sizeof(mp_c1));
+	time_now1 = GetTickCount();
+	next_c_idx1 = rand() % 7;
+	next_s_idx1 = rand() % 7;
+	next_d_idx1 = rand() % 4;
+	flag_over1 = 0;
+	score1 = 0;
+}
+
+void initDatasPerSquare()
+{
+	now_mp_x = 5;
+	now_mp_y = -1;
+	flag_next = 0;
+	now_c_idx = next_c_idx;
+	now_s_idx = next_s_idx;
+	now_d_idx = next_d_idx;
+	next_c_idx = rand() % 7;
+	next_s_idx = rand() % 7;
+	next_d_idx = rand() % 4;
+	now_mp_x1 =605;
+	now_mp_y1 = -1;
+	flag_next1 = 0;
+	now_c_idx1 = next_c_idx;
+	now_s_idx1 = next_s_idx;
+	now_d_idx1 = next_d_idx;
+	next_c_idx1 = rand() % 7;
+	next_s_idx1 = rand() % 7;
+	next_d_idx1 = rand() % 4;
+}
+
+void drawGameBG()
+{
+	// 划分区域（游戏区域、计分区域）
+	// 方块尺寸——36 * 36（单位：像素）
+	// 游戏尺寸——10 * 15（单位：方块）
+	// 下一个方块显示区域——4 * 4（单位：方块）
+
+	COLORREF tmp = getlinecolor();
+	for (int i = 0; i < 541; ++i)
+	{
+		setlinecolor(RGB(255, 179, 166));
+		line(0, 540 - i, 600, 540 - i);
+	}
+	for (int i = 0; i < 541; ++i)
+	{
+		setlinecolor(RGB(143, 188, 220 - i / 15));
+		line(601, i, 1200, i);
+	}
+	setlinecolor(tmp);
+}
+
+void drawSide()
+{
+	tmp_line_color = getlinecolor();
+	getlinestyle(&tmp_line_style);
+	tmp_text_color = getlinecolor();
+	gettextstyle(&tmp_text_style);
+
+	settextcolor(RGB(65, 105, 225));      	settextcolor(RGB(65, 105, 225));
+	settextstyle(20, 0, L"黑体");           	settextstyle(20, 0, L"黑体");
+	outtextxy(360 + 48, 300, L"左移：A");       outtextxy(960 + 48, 300, L"左移：←");
+	outtextxy(360 + 48, 330, L"右移：D");	    outtextxy(960 + 48, 330, L"右移：→");
+	outtextxy(360 + 48, 360, L"变形：W");   	outtextxy(960 + 48, 360, L"变形：↑");
+	outtextxy(360 + 48, 390, L"下落：S");       outtextxy(960 + 48, 390, L"下落：↓");
+
+	setlinecolor(WHITE);
+	rectangle(360 + 48, 36, 600 - 48, 36 + 144);
+	drawSquareNext();
+	setlinecolor(0x7FFFAA);
+	rectangle(360 + 48, 36, 600 - 48, 36 + 144);
+
+	setlinecolor(WHITE);
+	rectangle(960 + 48, 36, 1200 - 48, 36 + 144);
+	drawSquareNext();
+	setlinecolor(0x7FFFAA);
+	rectangle(960 + 48, 36, 1200 - 48, 36 + 144);
+
+	swprintf(score_tips, 29, L"得分：%d", score * 100);   swprintf(score_tips1, 29, L"得分：%d", score1 * 100);
+	outtextxy(360 + 48, 200, score_tips);               outtextxy(960 + 48, 200, score_tips1);
+
+	setlinecolor(tmp_line_color);
+	setlinestyle(&tmp_line_style);
+	settextcolor(tmp_text_color);
+	settextstyle(&tmp_text_style);
+}
+
+
+
+void drawItem(int x, int y, COLORREF c)
+{
+	// 方块设计
+	// 实际尺寸：32 * 32（单位：像素）
+	// 边框颜色：白色
+	// 圆角半径：4（单位：像素）
+	// 内部间距：2（单位：像素）
+	tmp_fill_color = getfillcolor();
+
+	const int r = 6;
+	const int p = 2;
+
+	int up_l_x = x + p + r;
+	int up_r_x = x + 36 - p - r;
+	int up___y = y + p;
+
+	int down_l_x = x + p + r;
+	int down_r_x = x + 36 - p - r;
+	int down___y = y + 36 - p;
+
+	int left_u_y = y + p + r;
+	int left_d_y = y + 36 - p - r;
+	int left___x = x + p;
+
+	int right_u_y = y + p + r;
+	int right_d_y = y + 36 - p - r;
+	int right___x = x + 36 - p;
+
+	line(up_l_x, up___y, up_r_x, up___y);
+	line(down_l_x, down___y, down_r_x, down___y);
+	line(left___x, left_u_y, left___x, left_d_y);
+	line(right___x, right_u_y, right___x, right_d_y);
+	arc(x + p, y + p, x + p + 2 * r, y + p + 2 * r, pi / 2, pi);
+	arc(x + 36 - p, y + p, x + 36 - p - 2 * r, y + p + 2 * r, 0, pi / 2);
+	arc(x + p, y + 36 - p, x + p + 2 * r, y + 36 - p - 2 * r, -pi, -pi / 2);
+	arc(x + 36 - p, y + 36 - p, x + 36 - p - 2 * r, y + 36 - p - 2 * r, -pi / 2, 0);
+
+	setfillcolor(c);
+	floodfill(x + p + r + 1, y + p + r + 1, WHITE);
+
+	setfillcolor(tmp_fill_color);
+}
+
+void drawSquareNow()
+{
+	drawItem((now_mp_x + squares[now_s_idx].dir[now_d_idx][0][0]) * 36, (now_mp_y + squares[now_s_idx].dir[now_d_idx][0][1]) * 36, colors[now_c_idx]);
+	drawItem((now_mp_x + squares[now_s_idx].dir[now_d_idx][1][0]) * 36, (now_mp_y + squares[now_s_idx].dir[now_d_idx][1][1]) * 36, colors[now_c_idx]);
+	drawItem((now_mp_x + squares[now_s_idx].dir[now_d_idx][2][0]) * 36, (now_mp_y + squares[now_s_idx].dir[now_d_idx][2][1]) * 36, colors[now_c_idx]);
+	drawItem((now_mp_x + squares[now_s_idx].dir[now_d_idx][3][0]) * 36, (now_mp_y + squares[now_s_idx].dir[now_d_idx][3][1]) * 36, colors[now_c_idx]);
+
+	drawItem((now_mp_x1 + squares1[now_s_idx1].dir[now_d_idx1][0][0]) * 36, (now_mp_y1 + squares1[now_s_idx1].dir[now_d_idx1][0][1]) * 36, colors[now_c_idx1]);
+	drawItem((now_mp_x1 + squares1[now_s_idx1].dir[now_d_idx1][1][0]) * 36, (now_mp_y1 + squares1[now_s_idx1].dir[now_d_idx1][1][1]) * 36, colors[now_c_idx1]);
+	drawItem((now_mp_x1 + squares1[now_s_idx1].dir[now_d_idx1][2][0]) * 36, (now_mp_y1 + squares1[now_s_idx1].dir[now_d_idx1][2][1]) * 36, colors[now_c_idx1]);
+	drawItem((now_mp_x1 + squares1[now_s_idx1].dir[now_d_idx1][3][0]) * 36, (now_mp_y1 + squares1[now_s_idx1].dir[now_d_idx1][3][1]) * 36, colors[now_c_idx1]);
+}
+
+void drawSquareNext()
+{
+	int tmp_x = 360 + 48;
+	int tmp_y = 36 + 108;
+	COLORREF c = colors[next_c_idx];
+	drawItem(tmp_x + squares[next_s_idx].dir[next_d_idx][0][0] * 36, tmp_y + squares[next_s_idx].dir[next_d_idx][0][1] * 36, c);
+	drawItem(tmp_x + squares[next_s_idx].dir[next_d_idx][1][0] * 36, tmp_y + squares[next_s_idx].dir[next_d_idx][1][1] * 36, c);
+	drawItem(tmp_x + squares[next_s_idx].dir[next_d_idx][2][0] * 36, tmp_y + squares[next_s_idx].dir[next_d_idx][2][1] * 36, c);
+	drawItem(tmp_x + squares[next_s_idx].dir[next_d_idx][3][0] * 36, tmp_y + squares[next_s_idx].dir[next_d_idx][3][1] * 36, c);
+
+	int tmp_x1 = 960 + 48;
+	int tmp_y1 = 36 + 108;
+	COLORREF c1= colors[next_c_idx1];
+	drawItem(tmp_x1 + squares1[next_s_idx1].dir[next_d_idx1][0][0] * 36, tmp_y1 + squares1[next_s_idx1].dir[next_d_idx1][0][1] * 36, c1);
+	drawItem(tmp_x1 + squares1[next_s_idx1].dir[next_d_idx1][1][0] * 36, tmp_y1 + squares1[next_s_idx1].dir[next_d_idx1][1][1] * 36, c1);
+	drawItem(tmp_x1 + squares1[next_s_idx1].dir[next_d_idx1][2][0] * 36, tmp_y1 + squares1[next_s_idx1].dir[next_d_idx1][2][1] * 36, c1);
+	drawItem(tmp_x1 + squares1[next_s_idx1].dir[next_d_idx1][3][0] * 36, tmp_y1 + squares1[next_s_idx1].dir[next_d_idx1][3][1] * 36, c1);
+}
+
+void drawMap()
+{
+	for (int i = 0; i < 10; ++i)
+		for (int j = 0; j < 15; ++j) {
+			if (mp[i][j])
+				drawItem(i * 36, j * 36, mp_c[i][j]);
+			if (mp1[i][j])
+				drawItem(i * 36, j * 36, mp_c1[i][j]);
+		}
+
+}
+
+Cmd getCmdR()
+{
+	while (true)
+	{
+		// 指令超时
+		DWORD time_tmp1 = GetTickCount();
+		if (time_tmp1 - time_now1 >= 1000)
+		{
+			time_now1 = time_tmp1;
+			return Cmd_down;
+		}
+
+		// 接受指令
+		if (_kbhit())
+		{
+			switch (_getch())
+			{
+			case 72:
+				return Cmd_rotate;
+			case 75:
+				return Cmd_left;
+			case 77:
+				return Cmd_right;
+			case 80:
+				return Cmd_down;
+			}
+		}
+
+		// 降低CPU占用
+		Sleep(20);
+	}
+}
+
+Cmd getCmdL()
+{
+	while (true)
+	{
+		// 指令超时
+		DWORD time_tmp = GetTickCount();
+		if (time_tmp - time_now >= 1000)
+		{
+			time_now = time_tmp;
+			return Cmd_down;
+		}
+
+		// 接受指令
+		if (_kbhit())
+		{
+			switch (_getch())
+			{
+				case 'W':
+				case'w':
+				return Cmd_rotate;
+			case 'A':
+			case'a':
+				return Cmd_left;
+			case 'D':
+			case'd':
+				return Cmd_right;
+			case 'S':
+			case's':
+				return Cmd_down;
+			}
+		}
+
+		// 降低CPU占用
+		Sleep(20);
+	}
+}
+
+void execCmd(Cmd cmd,int mp[10][15], int now_mp_x, int now_mp_y, int now_d_idx, Square squares[])
+{
+	if (now_mp_x > 599) {
+		switch (cmd)
+		{
+		case Cmd_down:
+			moveDown(mp1, now_mp_x1, now_mp_y1, now_d_idx1, squares1);
+			break;
+		case Cmd_left:
+			moveLeft(mp1, now_mp_x1, now_mp_y1, now_d_idx1, squares1);
+			break;
+		case Cmd_right:
+			moveRight(mp1, now_mp_x1, now_mp_y1, now_d_idx1, squares1);
+			break;
+		case Cmd_rotate: {
+			moveRotate(mp1, now_mp_x1, now_mp_y1, now_d_idx1, squares1);
+		}
+
+					   break;
 		}
 	}
-	post(0,height); // 绘制完成后，需要将位置定位到最低行.
-}
-class map{
-   private:
-   int map[300][300];
-   public:
-   void initmap();//初始化地图
-};
-void drawMap(int **map){;
-	pos(0, 0);
-	for(int i = 0; i < height; i++){
-		for(int j = 0; j < width; j++){
-			if(map[i][j] == 1){
-				cout << "■";	// 背景
-			}else{
-				cout << "□"; 	// 可移动区域 
-			}
+
+	else {
+		switch (cmd)
+		{
+		case Cmd_down:
+			moveDown(mp, now_mp_x, now_mp_y, now_d_idx, squares);
+			break;
+		case Cmd_left:
+			moveLeft(mp, now_mp_x, now_mp_y, now_d_idx, squares);
+			break;
+		case Cmd_right:
+			moveRight(mp, now_mp_x, now_mp_y, now_d_idx, squares);
+			break;
+		case Cmd_rotate: {
+			moveRotate(mp, now_mp_x, now_mp_y, now_d_idx, squares);
 		}
-		cout << endl;
-	} 
-	return;
+
+					   break;
+		}
+	}
 }
-class player{
-    private：
-    char name[100];
-    char name2[100];
-    public:
-    void cleanblock();//清除方块
-    bool judge();//判断是否需要清除
-    void addblock（）；//增加方块
-    void check（）；//检查方块移动是否正常
-    int num（）；//计算得到的分数
-}；
+
+bool checkPut(int mp_x, int mp_y, int dir_idx,Square squares[7])
+{
+	int sq_x[4];
+	int sq_y[4];
+	for (int i = 0; i < 4; ++i)
+	{
+		sq_x[i] = mp_x + squares[now_s_idx].dir[dir_idx][i][0];
+		sq_y[i] = mp_y + squares[now_s_idx].dir[dir_idx][i][1];
+	}
+
+	// 【左右越界、下方越界、重复占格】
+	for (int i = 0; i < 4; ++i)
+	{
+		if (sq_x[i] < 0 || sq_x[i] > 9 || sq_y[i] > 14)
+			return false;
+		if (sq_y[i] < 0) // 检查坐标合法性
+			continue;
+		if (mp[sq_x[i]][sq_y[i]])
+			return false;
+	}
+	return true;
+}
+
+void execClear(int mp_tmp[][15], COLORREF mp_c_tmp[][15],int score)
+{
+	memset(mp_tmp, 0, sizeof(mp_tmp));
+	memset(mp_c_tmp, 0, sizeof(mp_c_tmp));
+	int cnt_j = 14;
+	for (int j = 14; j >= 0; --j)
+	{
+		int cnt = 0;
+		for (int i = 0; i < 10; ++i)
+			if (mp[i][j])
+				++cnt;
+		if (cnt != 10)
+		{
+			for (int i = 0; i < 10; ++i)
+			{
+				mp_tmp[i][cnt_j] = mp[i][j];
+				mp_c_tmp[i][cnt_j] = mp_c[i][j];
+			}
+			--cnt_j;
+		}
+		else
+			++score;
+	}
+	for (int j = 0; j < 15; ++j)
+		for (int i = 0; i < 10; ++i)
+		{
+			mp[i][j] = mp_tmp[i][j];
+			mp_c[i][j] = mp_c_tmp[i][j];
+		}
+}
+
+bool checkOver(int mp[10][15])
+{
+	for (int i = 0; i < 10; ++i)
+		if (mp[i][0])
+			return true;
+	return false;
+}
+
+void moveRotate(int mp[10][15],int now_mp_x,int now_mp_y,int now_d_idx,Square squares[])
+{
+	// 尝试剩余所有形状，可以旋转即调整旋转状态
+	for (int i = 1; i <= 3; ++i)
+		if (checkPut(now_mp_x, now_mp_y, (now_d_idx + i) % 4,squares))
+		{
+			now_d_idx = (now_d_idx + i) % 4;
+			break;
+		}
+}
+
+void moveLeft(int mp[10][15], int now_mp_x, int now_mp_y, int now_d_idx,Square squares[])
+{
+	// 尝试能否左移
+	if (checkPut(now_mp_x - 1, now_mp_y, now_d_idx,squares))
+		--now_mp_x;
+}
+
+void moveRight(int mp[10][15], int now_mp_x, int now_mp_y, int now_d_idx,Square squares[])
+{
+	// 尝试能否右移
+	if (checkPut(now_mp_x + 1, now_mp_y, now_d_idx,squares))
+		++now_mp_x;
+}
+
+void moveDown(int mp[10][15], int now_mp_x, int now_mp_y, int now_d_idx,Square squares[7])
+{
+	// 尝试能否下移
+	if (checkPut(now_mp_x, now_mp_y + 1, now_d_idx,squares))
+	{
+		++now_mp_y;
+		return;
+	}
+
+	flag_next = 1;
+	recordSquareNow(now_mp_x, now_s_idx, now_d_idx, squares, mp);
+	execClear(mp_tmp, mp_c_tmp,score);
+
+	if (checkOver(mp)) {
+		flag_over = 1;
+	}
+}
+
+void recordSquareNow(int now_mp_x,int now_s_idx,int now_d_idx,Square square[7],int mp[10][15])
+{
+	int sq_x[4];
+	int sq_y[4];
+	for (int i = 0; i < 4; ++i)
+	{
+		sq_x[i] = now_mp_x + squares[now_s_idx].dir[now_d_idx][i][0];
+		sq_y[i] = now_mp_y + squares[now_s_idx].dir[now_d_idx][i][1];
+	}
+	for (int i = 0; i < 4; ++i)
+		if (sq_y[i] >= 0)
+		{
+			mp[sq_x[i]][sq_y[i]] = 1;
+			mp_c[sq_x[i]][sq_y[i]] = colors[now_c_idx];
+		}
+}
